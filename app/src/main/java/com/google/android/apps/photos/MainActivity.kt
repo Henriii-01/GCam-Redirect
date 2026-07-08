@@ -6,7 +6,7 @@ import android.os.Bundle
 class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        startActivity(packageManager.getLaunchIntentForPackage("app.alextran.immich"))
+        packageManager.getLaunchIntentForPackage("app.alextran.immich")?.let { startActivity(it) }
         finish()
     }
 }
