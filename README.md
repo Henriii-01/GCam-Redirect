@@ -3,9 +3,21 @@
 
 # Google/Pixel Camera - Redirect
 
-This is a tiny stub that simulates the Photos app, so pictures made in the Google Camera app (Pixel Camera) can be instantly opened in a custom gallery.
+Tiny apps that simulate the Google Photos app for the Google Camera app (Pixel Camera).
+Two variants, having the same package id (`com.google.android.apps.photos`)
 
-Currently supports:  
-[Immich](https://immich.app/)  
+## `gcam-redirect-stub.apk` — stub
 
-_more coming soon_
+Presence-only. Makes Pixel Camera believe Photos is installed so its built-in
+swipe filmstrip works.
+
+## `gcam-redirect.apk` — redirect
+
+Adds a launcher settings screen where you pick a redirect target:
+
+- [Immich](https://immich.app/)
+- System default gallery
+- Any custom package name (add via button, long-press to remove)
+
+Tapping the camera preview thumbnail redirects to the chosen app. 
+It will open the photo there if the app supports it (fallback: LaunchIntent).

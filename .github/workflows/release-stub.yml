@@ -1,10 +1,12 @@
-name: Release APK
+name: Release stub APK
 
 on:
   release:
-    types: 
-      - published
+    types:
+      - created
       - edited
+      - published
+      - prereleased
 
 permissions:
   contents: write
@@ -18,7 +20,7 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
-      - run: chmod +x gradlew && ./gradlew assembleRelease
+      - run: chmod +x gradlew && ./gradlew assembleStubRelease
       - name: Sign APK
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
@@ -33,11 +35,11 @@ jobs:
             SUFFIX="-alpha"
           fi
           "$TOOLS/zipalign" -f 4 \
-            app/build/outputs/apk/release/app-release-unsigned.apk "gcam-redirect${SUFFIX}.apk"
+            app/build/outputs/apk/stub/release/app-stub-release-unsigned.apk "gcam-redirect-stub${SUFFIX}.apk"
           "$TOOLS/apksigner" sign \
             --ks keystore.jks --ks-pass env:KEYSTORE_PASSWORD \
             --ks-key-alias "$KEY_ALIAS" --key-pass env:KEY_PASSWORD \
-            "gcam-redirect${SUFFIX}.apk"
+            "gcam-redirect-stub${SUFFIX}.apk"
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "${{ github.event.release.tag_name }}" gcam-redirect*.apk --clobber
+        run: gh release upload "${{ github.event.release.tag_name }}" gcam-redirect-stub*.apk --clobber
