@@ -2,6 +2,9 @@ package com.google.android.apps.photos
 
 import android.Manifest
 import android.app.Activity
+import android.app.AlertDialog
+import android.app.KeyguardManager
+import android.content.Intent
 import android.content.ContentUris
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -13,8 +16,10 @@ import android.view.GestureDetector
 import android.view.Gravity
 import android.view.MotionEvent
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.Toast
 import android.widget.VideoView
 import kotlin.concurrent.thread
 import kotlin.math.abs
@@ -30,6 +35,7 @@ class StubActivity : Activity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setShowWhenLocked(true)
 
         val initial = intent?.data
         if (initial == null) {
@@ -51,6 +57,23 @@ class StubActivity : Activity() {
         videoView.setOnErrorListener { _, _, _ -> true }
         root.addView(imageView)
         root.addView(videoView)
+
+        val margin = (16 * resources.displayMetrics.density).toInt()
+        val openButton = Button(this).apply {
+            text = "Open in app"
+            alpha = 0.9f
+            layoutParams = FrameLayout.LayoutParams(WRAP, WRAP, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL)
+                .apply { setMargins(margin, margin, margin, margin * 3) }
+            setOnClickListener { onOpenClicked() }
+            setOnLongClickListener { withUnlock { chooseTarget() }; true }
+        }
+        root.setOnApplyWindowInsetsListener { v, insets ->
+            val bars = insets.getInsets(android.view.WindowInsets.Type.systemBars())
+            (openButton.layoutParams as FrameLayout.LayoutParams).bottomMargin = margin + bars.bottom
+            openButton.requestLayout()
+            v.onApplyWindowInsets(insets)
+        }
+        root.addView(openButton)
         setContentView(root)
 
         items = listOf(Item(initial, initialIsVideo))
@@ -76,6 +99,61 @@ class StubActivity : Activity() {
             intent?.data?.let { loadLibrary(it) }
         }
     }
+
+    private fun onOpenClicked() {
+        val target = prefs.getString(KEY_TARGET, null)
+        if (target.isNullOrEmpty()) chooseTarget() else openInTarget(target)
+    }
+
+    private fun chooseTarget() {
+        val apps = photoApps()
+        if (apps.isEmpty()) {
+            Toast.makeText(this, "No app can open this", Toast.LENGTH_SHORT).show()
+            return
+        }
+        AlertDialog.Builder(this)
+            .setTitle("Open in…")
+            .setItems(apps.map { it.second }.toTypedArray()) { _, which ->
+                val pkg = apps[which].first
+                prefs.edit().putString(KEY_TARGET, pkg).apply()
+                openInTarget(pkg)
+            }
+            .show()
+    }
+
+    private fun photoApps(): List<Pair<String, String>> {
+        val probe = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(items.getOrNull(index)?.uri ?: intent.data, currentMime())
+        }
+        return packageManager.queryIntentActivities(probe, PackageManager.MATCH_DEFAULT_ONLY)
+            .map { it.activityInfo.packageName }
+            .distinct()
+            .filter { it != packageName }
+            .map { pkg -> pkg to appLabel(pkg) }
+            .sortedBy { it.second.lowercase() }
+    }
+
+    private fun appLabel(pkg: String): String = runCatching {
+        packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
+    }.getOrDefault(pkg)
+
+    private fun openInTarget(pkg: String) {
+        val uri = items.getOrNull(index)?.uri ?: return
+        val view = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, currentMime())
+            setPackage(pkg)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        val opened = runCatching { startActivity(view); true }.getOrDefault(false)
+        if (!opened) {
+            packageManager.getLaunchIntentForPackage(pkg)?.let { runCatching { startActivity(it) } }
+                ?: Toast.makeText(this, appLabel(pkg) + " can't open this", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun currentMime() = if (items.getOrNull(index)?.isVideo == true) "video/*" else "image/*"
+
+    private val prefs get() = getSharedPreferences("stub", MODE_PRIVATE)
 
     private fun granted(perm: String) =
         checkSelfPermission(perm) == PackageManager.PERMISSION_GRANTED
@@ -183,6 +261,8 @@ class StubActivity : Activity() {
         const val REQ_MEDIA = 1
         const val MAX_EDGE_PX = 2048
         const val MIN_FLING_PX = 100
+        const val KEY_TARGET = "open_target"
         const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
+        const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
     }
 }

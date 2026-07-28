@@ -16,7 +16,6 @@ class RedirectActivity : Activity() {
                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
         } else null
-        // Open on the photo; fall back to just launching the target app.
         val launched = view?.let { runCatching { startActivity(it) }.isSuccess } == true
         if (!launched && target != SYSTEM_DEFAULT) {
             packageManager.getLaunchIntentForPackage(target)

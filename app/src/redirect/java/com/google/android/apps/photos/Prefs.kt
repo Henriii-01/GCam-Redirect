@@ -3,7 +3,6 @@ package com.google.android.apps.photos
 import android.content.Context
 import android.content.SharedPreferences
 
-// "" = system default gallery (no explicit package)
 const val SYSTEM_DEFAULT = ""
 const val IMMICH = "app.alextran.immich"
 
