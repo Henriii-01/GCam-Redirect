@@ -105,6 +105,17 @@ class StubActivity : Activity() {
         if (target.isNullOrEmpty()) chooseTarget() else openInTarget(target)
     }
 
+    private fun withUnlock(action: () -> Unit) {
+        val km = getSystemService(KeyguardManager::class.java)
+        if (km?.isKeyguardLocked == true) {
+            km.requestDismissKeyguard(this, object : KeyguardManager.KeyguardDismissCallback() {
+                override fun onDismissSucceeded() = action()
+            })
+        } else {
+            action()
+        }
+    }
+
     private fun chooseTarget() {
         val apps = photoApps()
         if (apps.isEmpty()) {
