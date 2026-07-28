@@ -25,6 +25,12 @@ android {
         create("redirect") { dimension = "mode" }
     }
 
+    flavorDimensions += "mode"
+    productFlavors {
+        create("stub") { dimension = "mode" }
+        create("redirect") { dimension = "mode" }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false

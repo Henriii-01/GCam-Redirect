@@ -1,12 +1,40 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+<<<<<<< HEAD
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES" />
+=======
+    <queries>
+        <package android:name="app.alextran.immich" />
+        <intent>
+            <action android:name="com.android.camera.action.REVIEW" />
+            <data
+                android:mimeType="*/*"
+                android:scheme="content" />
+        </intent>
+        <intent>
+            <action android:name="android.provider.action.REVIEW" />
+            <data
+                android:mimeType="*/*"
+                android:scheme="content" />
+        </intent>
+        <intent>
+            <action android:name="android.provider.action.REVIEW_SECURE" />
+            <data
+                android:mimeType="*/*"
+                android:scheme="content" />
+        </intent>
+    </queries>
+>>>>>>> 5434269 (split into two flavors:)
 
     <application>
 
         <activity
+<<<<<<< HEAD
             android:name=".RedirectActivity"
+=======
+            android:name=".MainActivity"
+>>>>>>> 5434269 (split into two flavors:)
             android:exported="true"
             android:excludeFromRecents="true"
             android:noHistory="true"
@@ -35,6 +63,7 @@
             </intent-filter>
         </activity>
 
+<<<<<<< HEAD
         <activity
             android:name=".SettingsActivity"
             android:exported="true"
@@ -45,6 +74,8 @@
             </intent-filter>
         </activity>
 
+=======
+>>>>>>> 5434269 (split into two flavors:)
     </application>
 
 </manifest>
